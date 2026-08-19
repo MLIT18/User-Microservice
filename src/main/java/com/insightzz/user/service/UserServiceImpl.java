@@ -3,9 +3,11 @@ package com.insightzz.user.service;
 import com.insightzz.user.dto.UserCreateRequest;
 import com.insightzz.user.dto.UserResponse;
 import com.insightzz.user.dto.UserUpdateRequest;
+import com.insightzz.user.entity.Role;
 import com.insightzz.user.entity.User;
 import com.insightzz.user.exception.DuplicateUserException;
 import com.insightzz.user.exception.UserNotFoundException;
+import com.insightzz.user.repository.RoleRepository;
 import com.insightzz.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,42 +23,68 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
     // =========================================================
     // CREATE USER
     // =========================================================
 
     @Override
-    public UserResponse createUser(UserCreateRequest request) {
+    public UserResponse createUser(
+            UserCreateRequest request) {
 
         // =========================================================
-        // USERNAME DUPLICATE CHECK
+        // USERNAME DUPLICATE
         // =========================================================
 
-        if (userRepository.existsByUserName(request.getUserName())) {
+        if (userRepository.existsByUserName(
+                request.getUserName())) {
+
             throw new DuplicateUserException(
                     "Username already exists"
             );
         }
 
-
         // =========================================================
-        // EMAIL DUPLICATE CHECK
+        // EMAIL DUPLICATE
         // =========================================================
 
-        if (userRepository.existsByUserEmail(request.getUserEmail())) {
+        if (userRepository.existsByUserEmail(
+                request.getUserEmail())) {
+
             throw new DuplicateUserException(
                     "Email already exists"
             );
         }
 
+        // =========================================================
+        // FIND ROLE
+        // =========================================================
+
+        Role role = roleRepository
+                .findById(request.getRoleId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Invalid role selected"
+                        )
+                );
 
         // =========================================================
-        // KEEP PLAIN PASSWORD ONLY IN MEMORY
+        // CHECK ROLE ACTIVE
+        // =========================================================
+
+        if (!Boolean.TRUE.equals(role.getIsActive())) {
+
+            throw new IllegalArgumentException(
+                    "Selected role is inactive"
+            );
+        }
+
+        // =========================================================
+        // PASSWORD
         // =========================================================
 
         String plainPassword = request.getPassword();
-
 
         // =========================================================
         // CREATE USER
@@ -64,31 +92,22 @@ public class UserServiceImpl implements UserService {
 
         User user = User.builder()
                 .userName(request.getUserName())
-
-                // BCrypt password for DB
                 .password(
                         passwordEncoder.encode(
                                 plainPassword
                         )
                 )
-
                 .userEmail(request.getUserEmail())
                 .userMobNo(request.getUserMobNo())
                 .userDesignation(request.getUserDesignation())
                 .userDoj(request.getUserDoj())
                 .userDol(request.getUserDol())
-                .userRole(request.getUserRole())
+                .role(role)
                 .isActive(true)
                 .build();
 
-
-        // =========================================================
-        // SAVE
-        // =========================================================
-
         User savedUser =
                 userRepository.save(user);
-
 
         // =========================================================
         // RESPONSE
@@ -96,9 +115,9 @@ public class UserServiceImpl implements UserService {
 
         return UserResponse.builder()
                 .userId(savedUser.getUserId())
-                .userRole(savedUser.getUserRole())
+                .userRole(role.getRoleName())
+                .roleId(role.getId())
                 .userName(savedUser.getUserName())
-                // Return only the password entered during this request
                 .password(plainPassword)
                 .userEmail(savedUser.getUserEmail())
                 .userMobNo(savedUser.getUserMobNo())
@@ -108,9 +127,6 @@ public class UserServiceImpl implements UserService {
                 .isActive(savedUser.getIsActive())
                 .createDatetime(savedUser.getCreateDatetime())
                 .updateDatetime(savedUser.getUpdateDatetime())
-
-
-
                 .build();
     }
 
@@ -159,6 +175,10 @@ public class UserServiceImpl implements UserService {
             UserUpdateRequest request
     ) {
 
+        // =========================================================
+        // FIND USER
+        // =========================================================
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
                         new UserNotFoundException(
@@ -178,12 +198,15 @@ public class UserServiceImpl implements UserService {
             if (userRepository.existsByUserName(
                     request.getUserName()
             )) {
+
                 throw new DuplicateUserException(
                         "Username already exists"
                 );
             }
 
-            user.setUserName(request.getUserName());
+            user.setUserName(
+                    request.getUserName()
+            );
         }
 
 
@@ -198,50 +221,103 @@ public class UserServiceImpl implements UserService {
             if (userRepository.existsByUserEmail(
                     request.getUserEmail()
             )) {
+
                 throw new DuplicateUserException(
                         "Email already exists"
                 );
             }
 
-            user.setUserEmail(request.getUserEmail());
+            user.setUserEmail(
+                    request.getUserEmail()
+            );
         }
 
 
         // =========================================================
-        // OTHER FIELDS
+        // MOBILE
         // =========================================================
 
         if (request.getUserMobNo() != null) {
+
             user.setUserMobNo(
                     request.getUserMobNo()
             );
         }
 
+
+        // =========================================================
+        // DESIGNATION
+        // =========================================================
+
         if (request.getUserDesignation() != null) {
+
             user.setUserDesignation(
                     request.getUserDesignation()
             );
         }
 
+
+        // =========================================================
+        // DOJ
+        // =========================================================
+
         if (request.getUserDoj() != null) {
+
             user.setUserDoj(
                     request.getUserDoj()
             );
         }
 
+
+        // =========================================================
+        // DOL
+        // =========================================================
+
         if (request.getUserDol() != null) {
+
             user.setUserDol(
                     request.getUserDol()
             );
         }
 
-        if (request.getUserRole() != null) {
-            user.setUserRole(
-                    request.getUserRole()
-            );
+
+        // =========================================================
+        // ROLE UPDATE
+        // =========================================================
+
+        if (request.getRoleId() != null) {
+
+            Role role = roleRepository
+                    .findById(request.getRoleId())
+                    .orElseThrow(() ->
+                            new IllegalArgumentException(
+                                    "Invalid role selected"
+                            )
+                    );
+
+
+            // -----------------------------------------------------
+            // ROLE ACTIVE CHECK
+            // -----------------------------------------------------
+
+            if (!Boolean.TRUE.equals(role.getIsActive())) {
+
+                throw new IllegalArgumentException(
+                        "Selected role is inactive"
+                );
+            }
+
+
+            user.setRole(role);
         }
 
+
+        // =========================================================
+        // ACTIVE / INACTIVE
+        // =========================================================
+
         if (request.getIsActive() != null) {
+
             user.setIsActive(
                     request.getIsActive()
             );
@@ -252,7 +328,8 @@ public class UserServiceImpl implements UserService {
         // PASSWORD UPDATE
         // =========================================================
 
-        String plainPassword = request.getPassword();
+        String plainPassword =
+                request.getPassword();
 
         if (plainPassword != null &&
                 !plainPassword.isBlank()) {
@@ -279,17 +356,36 @@ public class UserServiceImpl implements UserService {
 
         UserResponse.UserResponseBuilder response =
                 UserResponse.builder()
-                        .userId(updatedUser.getUserId())
-                        .userRole(updatedUser.getUserRole())
-                        .userName(updatedUser.getUserName())
-                        .userEmail(updatedUser.getUserEmail())
-                        .userMobNo(updatedUser.getUserMobNo())
+                        .userId(
+                                updatedUser.getUserId()
+                        )
+                        .roleId(
+                                updatedUser.getRole().getId()
+                        )
+                        .userRole(
+                                updatedUser.getRole().getRoleName()
+                        )
+                        .userName(
+                                updatedUser.getUserName()
+                        )
+                        .userEmail(
+                                updatedUser.getUserEmail()
+                        )
+                        .userMobNo(
+                                updatedUser.getUserMobNo()
+                        )
                         .userDesignation(
                                 updatedUser.getUserDesignation()
                         )
-                        .userDoj(updatedUser.getUserDoj())
-                        .userDol(updatedUser.getUserDol())
-                        .isActive(updatedUser.getIsActive())
+                        .userDoj(
+                                updatedUser.getUserDoj()
+                        )
+                        .userDol(
+                                updatedUser.getUserDol()
+                        )
+                        .isActive(
+                                updatedUser.getIsActive()
+                        )
                         .createDatetime(
                                 updatedUser.getCreateDatetime()
                         )
@@ -297,12 +393,19 @@ public class UserServiceImpl implements UserService {
                                 updatedUser.getUpdateDatetime()
                         );
 
-        // Return plain password ONLY when password was updated
+
+        // =========================================================
+        // RETURN NEW PASSWORD ONLY
+        // =========================================================
+
         if (plainPassword != null &&
                 !plainPassword.isBlank()) {
 
-            response.password(plainPassword);
+            response.password(
+                    plainPassword
+            );
         }
+
 
         return response.build();
     }
@@ -333,17 +436,43 @@ public class UserServiceImpl implements UserService {
     private UserResponse mapToResponse(User user) {
 
         return UserResponse.builder()
-                .userId(user.getUserId())
-                .userRole(user.getUserRole())
-                .userName(user.getUserName())
-                .userEmail(user.getUserEmail())
-                .userMobNo(user.getUserMobNo())
-                .userDesignation(user.getUserDesignation())
-                .userDoj(user.getUserDoj())
-                .userDol(user.getUserDol())
-                .isActive(user.getIsActive())
-                .createDatetime(user.getCreateDatetime())
-                .updateDatetime(user.getUpdateDatetime())
+                .userId(
+                        user.getUserId()
+                )
+                .roleId(
+                        user.getRole().getId()
+                )
+                .userRole(
+                        user.getRole().getRoleName()
+                )
+                .userName(
+                        user.getUserName()
+                )
+                .password(null)
+                .userEmail(
+                        user.getUserEmail()
+                )
+                .userMobNo(
+                        user.getUserMobNo()
+                )
+                .userDesignation(
+                        user.getUserDesignation()
+                )
+                .userDoj(
+                        user.getUserDoj()
+                )
+                .userDol(
+                        user.getUserDol()
+                )
+                .isActive(
+                        user.getIsActive()
+                )
+                .createDatetime(
+                        user.getCreateDatetime()
+                )
+                .updateDatetime(
+                        user.getUpdateDatetime()
+                )
                 .build();
     }
 }

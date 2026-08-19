@@ -27,12 +27,12 @@ public class User {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(
-            name = "user_role",
-            nullable = false,
-            length = 50
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "role_id",
+            nullable = false
     )
-    private String userRole;
+    private Role role;
 
     @Column(
             name = "user_name",
