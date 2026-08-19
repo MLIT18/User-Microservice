@@ -6,25 +6,39 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "role_master")
+@Table(name = "permission_master")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Role {
+public class Permission {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(
-            name = "role_name",
+            name = "permission_code",
             nullable = false,
             unique = true,
+            length = 150
+    )
+    private String permissionCode;
+
+    @Column(
+            name = "module",
+            nullable = false,
             length = 100
     )
-    private String roleName;
+    private String module;
+
+    @Column(
+            name = "action",
+            nullable = false,
+            length = 50
+    )
+    private String action;
 
     @Column(length = 255)
     private String description;
