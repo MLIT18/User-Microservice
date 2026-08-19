@@ -1,0 +1,114 @@
+package com.insightzz.user.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(
+        name = "users",
+        indexes = {
+                @Index(name = "idx_users_username", columnList = "user_name"),
+                @Index(name = "idx_users_email", columnList = "user_email"),
+                @Index(name = "idx_users_role", columnList = "user_role")
+        }
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
+    private Long userId;
+
+    @Column(
+            name = "user_role",
+            nullable = false,
+            length = 50
+    )
+    private String userRole;
+
+    @Column(
+            name = "user_name",
+            nullable = false,
+            length = 100
+    )
+    private String userName;
+
+    @Column(
+            name = "password",
+            nullable = false,
+            length = 255
+    )
+    private String password;
+
+    @Column(
+            name = "user_email",
+            nullable = false,
+            unique = true,
+            length = 254
+    )
+    private String userEmail;
+
+    @Column(
+            name = "user_mob_no",
+            length = 15
+    )
+    private String userMobNo;
+
+    @Column(
+            name = "user_designation",
+            length = 100
+    )
+    private String userDesignation;
+
+    @Column(name = "user_doj")
+    private LocalDate userDoj;
+
+    @Column(name = "user_dol")
+    private LocalDate userDol;
+
+    @Column(
+            name = "is_active",
+            nullable = false
+    )
+    private Boolean isActive;
+
+    @Column(
+            name = "create_datetime",
+            nullable = false,
+            updatable = false
+    )
+    private LocalDateTime createDatetime;
+
+    @Column(
+            name = "update_datetime",
+            nullable = false
+    )
+    private LocalDateTime updateDatetime;
+
+    @PrePersist
+    protected void onCreate() {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        this.createDatetime = now;
+        this.updateDatetime = now;
+
+        if (this.isActive == null) {
+            this.isActive = true;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+
+        this.updateDatetime = LocalDateTime.now();
+    }
+}

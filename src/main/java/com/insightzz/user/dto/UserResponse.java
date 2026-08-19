@@ -1,0 +1,36 @@
+package com.insightzz.user.dto;
+
+import lombok.Builder;
+import lombok.Getter;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Getter
+@Builder
+public class UserResponse {
+
+    private Long userId;
+
+    private String userRole;
+
+    private String userName;
+
+    private String password;
+
+    private String userEmail;
+
+    private String userMobNo;
+
+    private String userDesignation;
+
+    private LocalDate userDoj;
+
+    private LocalDate userDol;
+
+    private Boolean isActive;
+
+    private LocalDateTime createDatetime;
+
+    private LocalDateTime updateDatetime;
+}
