@@ -34,28 +34,28 @@ public class UserServiceImpl implements UserService {
             UserCreateRequest request) {
 
         // =========================================================
-        // USERNAME DUPLICATE
-        // =========================================================
+// USERNAME + EMAIL DUPLICATE CHECK
+// =========================================================
 
-        if (userRepository.existsByUserName(
-                request.getUserName())) {
+        boolean usernameExists = userRepository.existsByUserName(request.getUserName());
+        boolean emailExists = userRepository.existsByUserEmail(request.getUserEmail());
 
-            throw new DuplicateUserException(
-                    "Username already exists"
+        if (usernameExists && emailExists) {
+
+            // Confirm it's the SAME user having both matching username and email
+            boolean sameUserHasBoth = userRepository.existsByUserNameAndUserEmail(
+                    request.getUserName(),
+                    request.getUserEmail()
             );
+
+            if (sameUserHasBoth) {
+                throw new DuplicateUserException(
+                        "Username already exists"
+                );
+            }
         }
 
-        // =========================================================
-        // EMAIL DUPLICATE
-        // =========================================================
-
-        if (userRepository.existsByUserEmail(
-                request.getUserEmail())) {
-
-            throw new DuplicateUserException(
-                    "Email already exists"
-            );
-        }
+// otherwise, proceed with insert
 
         // =========================================================
         // FIND ROLE
