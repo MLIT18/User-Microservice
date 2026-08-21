@@ -92,6 +92,8 @@ public class UserServiceImpl implements UserService {
 
         User user = User.builder()
                 .userName(request.getUserName())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
                 .password(
                         passwordEncoder.encode(
                                 plainPassword
@@ -119,6 +121,8 @@ public class UserServiceImpl implements UserService {
                 .roleId(role.getId())
                 .userName(savedUser.getUserName())
                 .password(plainPassword)
+                .firstName(savedUser.getFirstName())
+                .lastName(savedUser.getLastName())
                 .userEmail(savedUser.getUserEmail())
                 .userMobNo(savedUser.getUserMobNo())
                 .userDesignation(savedUser.getUserDesignation())
@@ -158,7 +162,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public List<UserResponse> getAllUsers() {
 
-        return userRepository.findAll()
+        return userRepository.findAllWithRole()
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
