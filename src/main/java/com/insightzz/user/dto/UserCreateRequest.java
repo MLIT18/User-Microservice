@@ -10,13 +10,21 @@ import java.time.LocalDate;
 @Setter
 public class UserCreateRequest {
 
-    @NotBlank(message = "User name is required")
+    @NotBlank(message = "Employe ID is required")
     @Size(
             min = 3,
-            max = 100,
-            message = "User name must be between 3 and 100 characters"
+            max = 10,
+            message = "Employe ID must be between 3 and 10 characters"
     )
-    private String userName;
+    private String employeId;
+
+    @NotBlank(message = "Department is required")
+    @Size(
+            min = 1,
+            max = 50,
+            message = "Department must be between 3 and 50 characters"
+    )
+    private String department;
 
     @NotBlank(message = "First name is required")
     @Size(

@@ -1,9 +1,6 @@
 package com.insightzz.user.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,19 +10,28 @@ import java.time.LocalDate;
 @Setter
 public class UserUpdateRequest {
 
+    //@NotBlank(message = "Employe ID is required")
     @Size(
             min = 3,
-            max = 100,
-            message = "User name must be between 5 and 100 characters"
+            max = 10,
+            message = "Employe ID must be between 3 and 10 characters"
     )
-    private String userName;
+    private String employeId;
 
-    @Email(message = "Invalid email format")
+    //@NotBlank(message = "Department is required")
     @Size(
-            max = 254,
-            message = "Email cannot exceed 254 characters"
+            min = 1,
+            max = 10,
+            message = "Department must be between 3 and 10 characters"
     )
-    private String userEmail;
+    private String department;
+
+//    @Email(message = "Invalid email format")
+//    @Size(
+//            max = 254,
+//            message = "Email cannot exceed 254 characters"
+//    )
+//    private String userEmail;
 
     @Pattern(
             regexp = "^[0-9]{10,15}$",
@@ -43,7 +49,7 @@ public class UserUpdateRequest {
 
     private LocalDate userDol;
 
-    @NotNull
+    //@NotNull
     private Integer roleId;
 
     private Boolean isActive;

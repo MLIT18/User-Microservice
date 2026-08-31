@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "users",
         indexes = {
-                @Index(name = "idx_users_username", columnList = "user_name"),
+                //@Index(name = "idx_users_username", columnList = "user_name"),
                 @Index(name = "idx_users_email", columnList = "user_email"),
                 //@Index(name = "idx_users_role", columnList = "user_role")
         }
@@ -35,23 +35,30 @@ public class User {
     private Role role;
 
     @Column(
-            name = "user_name",
+            name = "employe_id",
             nullable = false,
-            length = 100
+            length = 20
     )
-    private String userName;
+    private String employeId;
+
+    @Column(
+            name = "department",
+            nullable = false,
+            length = 20
+    )
+    private String department;
 
     @Column(
             name = "first_name",
             nullable = false,
-            length = 100
+            length = 20
     )
     private String firstName;
 
     @Column(
             name = "last_name",
             nullable = false,
-            length = 100
+            length = 20
     )
     private String lastName;
 
@@ -66,7 +73,7 @@ public class User {
             name = "user_email",
             nullable = false,
             unique = true,
-            length = 254
+            length = 50
     )
     private String userEmail;
 
@@ -78,7 +85,7 @@ public class User {
 
     @Column(
             name = "user_designation",
-            length = 100
+            length = 30
     )
     private String userDesignation;
 

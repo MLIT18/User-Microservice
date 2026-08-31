@@ -2,6 +2,7 @@ package com.insightzz.user.service;
 
 import com.insightzz.user.dto.UserCreateRequest;
 import com.insightzz.user.dto.UserResponse;
+import com.insightzz.user.dto.UserSuggestionResponse;
 import com.insightzz.user.dto.UserUpdateRequest;
 import com.insightzz.user.entity.Role;
 import com.insightzz.user.entity.User;
@@ -10,9 +11,15 @@ import com.insightzz.user.exception.UserNotFoundException;
 import com.insightzz.user.repository.RoleRepository;
 import com.insightzz.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 
@@ -37,20 +44,20 @@ public class UserServiceImpl implements UserService {
 // USERNAME + EMAIL DUPLICATE CHECK
 // =========================================================
 
-        boolean usernameExists = userRepository.existsByUserName(request.getUserName());
+        boolean employeIdExists = userRepository.existsByEmployeId(request.getEmployeId());
         boolean emailExists = userRepository.existsByUserEmail(request.getUserEmail());
 
-        if (usernameExists && emailExists) {
+        if (employeIdExists && emailExists) {
 
             // Confirm it's the SAME user having both matching username and email
-            boolean sameUserHasBoth = userRepository.existsByUserNameAndUserEmail(
-                    request.getUserName(),
+            boolean sameUserHasBoth = userRepository.existsByEmployeIdAndUserEmail(
+                    request.getEmployeId(),
                     request.getUserEmail()
             );
 
             if (sameUserHasBoth) {
                 throw new DuplicateUserException(
-                        "Username already exists"
+                        "Employe already exists"
                 );
             }
         }
@@ -91,7 +98,8 @@ public class UserServiceImpl implements UserService {
         // =========================================================
 
         User user = User.builder()
-                .userName(request.getUserName())
+                .employeId(request.getEmployeId())
+                .department(request.getDepartment())
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .password(
@@ -119,10 +127,15 @@ public class UserServiceImpl implements UserService {
                 .userId(savedUser.getUserId())
                 .userRole(role.getRoleName())
                 .roleId(role.getId())
-                .userName(savedUser.getUserName())
+               // .userName(savedUser.getUserName())
+                .employeId(savedUser.getEmployeId())
+                .department(savedUser.getDepartment())
                 .password(plainPassword)
-                .firstName(savedUser.getFirstName())
-                .lastName(savedUser.getLastName())
+//                .firstName(savedUser.getFirstName())
+//                .lastName(savedUser.getLastName())
+                .fullName(
+                        savedUser.getFirstName() + " " + savedUser.getLastName()
+                )
                 .userEmail(savedUser.getUserEmail())
                 .userMobNo(savedUser.getUserMobNo())
                 .userDesignation(savedUser.getUserDesignation())
@@ -192,49 +205,31 @@ public class UserServiceImpl implements UserService {
 
 
         // =========================================================
-        // USERNAME
+        // EmployeID
         // =========================================================
 
-        if (request.getUserName() != null
-                && !request.getUserName()
-                .equals(user.getUserName())) {
+        if (request.getEmployeId() != null
+                && !request.getEmployeId()
+                .equals(user.getEmployeId())) {
 
-            if (userRepository.existsByUserName(
-                    request.getUserName()
+            if (userRepository.existsByEmployeId(
+                    request.getEmployeId()
             )) {
 
                 throw new DuplicateUserException(
-                        "Username already exists"
+                        "EmployeId already exists"
                 );
             }
 
-            user.setUserName(
-                    request.getUserName()
+            user.setEmployeId(
+                    request.getEmployeId()
             );
         }
 
 
-        // =========================================================
-        // EMAIL
-        // =========================================================
 
-        if (request.getUserEmail() != null
-                && !request.getUserEmail()
-                .equals(user.getUserEmail())) {
 
-            if (userRepository.existsByUserEmail(
-                    request.getUserEmail()
-            )) {
 
-                throw new DuplicateUserException(
-                        "Email already exists"
-                );
-            }
-
-            user.setUserEmail(
-                    request.getUserEmail()
-            );
-        }
 
 
         // =========================================================
@@ -262,18 +257,6 @@ public class UserServiceImpl implements UserService {
 
 
         // =========================================================
-        // DOJ
-        // =========================================================
-
-        if (request.getUserDoj() != null) {
-
-            user.setUserDoj(
-                    request.getUserDoj()
-            );
-        }
-
-
-        // =========================================================
         // DOL
         // =========================================================
 
@@ -285,35 +268,7 @@ public class UserServiceImpl implements UserService {
         }
 
 
-        // =========================================================
-        // ROLE UPDATE
-        // =========================================================
 
-        if (request.getRoleId() != null) {
-
-            Role role = roleRepository
-                    .findById(request.getRoleId())
-                    .orElseThrow(() ->
-                            new IllegalArgumentException(
-                                    "Invalid role selected"
-                            )
-                    );
-
-
-            // -----------------------------------------------------
-            // ROLE ACTIVE CHECK
-            // -----------------------------------------------------
-
-            if (!Boolean.TRUE.equals(role.getIsActive())) {
-
-                throw new IllegalArgumentException(
-                        "Selected role is inactive"
-                );
-            }
-
-
-            user.setRole(role);
-        }
 
 
         // =========================================================
@@ -369,21 +324,15 @@ public class UserServiceImpl implements UserService {
                         .userRole(
                                 updatedUser.getRole().getRoleName()
                         )
-                        .userName(
-                                updatedUser.getUserName()
-                        )
-                        .userEmail(
-                                updatedUser.getUserEmail()
-                        )
+                        .employeId(updatedUser.getEmployeId())
+
                         .userMobNo(
                                 updatedUser.getUserMobNo()
                         )
                         .userDesignation(
                                 updatedUser.getUserDesignation()
                         )
-                        .userDoj(
-                                updatedUser.getUserDoj()
-                        )
+
                         .userDol(
                                 updatedUser.getUserDol()
                         )
@@ -420,6 +369,7 @@ public class UserServiceImpl implements UserService {
     // =========================================================
 
     @Override
+    @Transactional
     public void deleteUser(Long userId) {
 
         User user = userRepository.findById(userId)
@@ -429,7 +379,9 @@ public class UserServiceImpl implements UserService {
                         )
                 );
 
-        userRepository.delete(user);
+        user.setIsActive(false);
+
+        userRepository.save(user);
     }
 
 
@@ -449,10 +401,13 @@ public class UserServiceImpl implements UserService {
                 .userRole(
                         user.getRole().getRoleName()
                 )
-                .userName(
-                        user.getUserName()
-                )
+
                 .password(null)
+                .fullName(
+                        user.getFirstName() + " " + user.getLastName()
+                )
+                .employeId(user.getEmployeId())
+                .department(user.getDepartment())
                 .userEmail(
                         user.getUserEmail()
                 )
@@ -477,6 +432,74 @@ public class UserServiceImpl implements UserService {
                 .updateDatetime(
                         user.getUpdateDatetime()
                 )
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserResponse> getUsersByRole(
+            String roleName) {
+
+        return userRepository
+                .findByRole_RoleNameAndIsActiveTrue(
+                        roleName
+                )
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserResponse> searchUsers(String search) {
+
+        if (search == null || search.isBlank()) {
+            return getAllUsers();
+        }
+
+        return userRepository
+                .searchUsers(search.trim())
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserSuggestionResponse> getUserSuggestions(
+            String query,
+            int limit) {
+
+        if (query == null || query.isBlank()) {
+            return List.of();
+        }
+
+        Pageable pageable =
+                PageRequest.of(
+                        0,
+                        limit,
+                        Sort.by(
+                                Sort.Direction.ASC,
+                                "firstName"
+                        )
+                );
+
+        return userRepository
+                .findSuggestions(query.trim(), pageable)
+                .stream()
+                .map(this::mapToSuggestion)
+                .toList();
+    }
+
+    private UserSuggestionResponse mapToSuggestion(User user) {
+
+        return UserSuggestionResponse.builder()
+                .userId(user.getUserId())
+                .employeId(user.getEmployeId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .userEmail(user.getUserEmail())
+                .department(user.getDepartment())
                 .build();
     }
 }

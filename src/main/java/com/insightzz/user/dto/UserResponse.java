@@ -16,13 +16,18 @@ public class UserResponse {
 
     private String userRole;
 
-    private String userName;
+    //private String userName;
+    private String employeId;
+
+    private String department;
 
     private String password;
 
-    private String firstName;
+    private String fullName;
 
-    private String lastName;
+    //private String firstName;
+
+   // private String lastName;
 
     private String userEmail;
 
