@@ -132,4 +132,7 @@ public class User {
 
         this.updateDatetime = LocalDateTime.now();
     }
+    @Column(name = "token_version", nullable = false)
+    private Long tokenVersion;
+
 }

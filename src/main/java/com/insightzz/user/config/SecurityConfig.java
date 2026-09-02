@@ -50,7 +50,9 @@ public class SecurityConfig {
                         // -----------------------------------------
                         // Public
                         // -----------------------------------------
-
+                        .requestMatchers(
+                                "/internal/authorization/**"
+                        ).permitAll()
                         .requestMatchers(
                                 "/actuator/health"
                         ).permitAll()
